@@ -1,0 +1,23 @@
+---
+title: "Week 5B: Chess ELO Calculations"
+author: "Pascal Hermann Kouogang Tafo"
+format: html
+editor: visual
+---
+
+## INTRODUCTION
+
+This assignment goal is to compare the chess player’s actual score with their expected score calculated using the **ELO rating system's probability formula**. This analysis will then facilitate to classify players who most over performed and those who most under performed of course relative to their expected score.
+
+## APPROACH
+
+To reach that goal:
+
+1\) Read the csv file that i obtained from project 1 as a Data frame in R Use the **ELO rating system formula** as followed: **Expected_Score = 1/(1+10ˆ((Rb-Ra)/400))** where **Rb** represents the Opponents rating and **Ra** the player rating to **calculate** a "baseline" score for a 7-round chess tournament.
+
+2\) Use the **mutate() function** from Dplyr R-package to help us accomplish 2 tasks:
+
+-   **Calculate** the players’ Expected score using the ELO formula and existing columns and Create a new column in our original data frame.
+-   **Calculate and Create** a column that represents the difference from their actual score using a basic arithmetic calculation (**Difference = actual score(Total Points) - Expected Score**) .
+
+3\) Finally, I will either use the **slice_max()** and **slice_min()** functions or **Sort the column** of the score difference **by ascending and descending** to rank the five most over performed and most under performed players.
