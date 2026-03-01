@@ -1,0 +1,171 @@
+---
+title: "Week 5B: Chess ELO Calculations"
+author: "Pascal Hermann Kouogang Tafo"
+format: html
+editor: visual
+---
+
+## INTRODUCTION
+
+This assignment goal is to compare the chess player’s actual score with their expected score calculated using the **ELO rating system's probability formula**. This analysis will then facilitate to classify players who most over performed and those who most under performed of course relative to their expected score.
+
+## APPROACH
+
+To reach that goal:
+
+1\) Read the csv file that i obtained from project 1 as a Data frame in R Use the **ELO rating system formula** as followed: **Expected_Score = 1/(1+10ˆ((Rb-Ra)/400))** where **Rb** represents the Average Opponents rating and **Ra** the player rating to **calculate** a "baseline" score for a 7-round chess tournament.
+
+2\) Use the **mutate() function** from Dplyr R-package to help us accomplish 2 tasks:
+
+-   **Calculate** the players’ Expected score using the ELO formula and existing columns and Create a new column in our original data frame.
+-   **Calculate and Create** a column that represents the difference from their actual score using a basic arithmetic calculation (**Difference = actual score(Total Points) - Expected Score**) .
+
+3\) Finally, I will either use the **slice_max()** and **slice_min()** functions or **Sort the column** of the score difference **by ascending and descending** to rank the five most over performed and most under performed players.
+
+## LOad Library
+
+```{r}
+
+library(dplyr)
+
+```
+
+## Load the Data set
+
+Here i will load the final result data table that i obtained from the Chess tournament analysis in Project1 from GitHub repo . The dataset contains the Average player's opponent rating and the Pre tournament player rating that will be useful to calculate each player's expected score.
+
+```{r}
+
+url<- "https://raw.githubusercontent.com/Pascaltafo2025/Week-5B--DATA-607/refs/heads/main/Final_tournament_PlayersInfo.csv"
+
+Chess_Players_ratings <- read.csv(url)
+head(Chess_Players_ratings,10)
+
+```
+
+## Compute each player's expected score and the difference from their actual score.
+
+To perform those calculations, we will Use the **ELO rating system formula** as followed: **Expected_Score = 1/(1+10ˆ((Rb-Ra)/400))** where **Rb** represents the Average Opponents rating(AvgOpponentRating) and **Ra** the pre-tournament player rating (PreRating). Once we find the expected score for each player, we will then compute difference from their actual score using a basic arithmetic calculation (**Difference = actual score(Total Points) - Expected Score**). NB: We should keep in mind that tournament was madeof 7 rounds.
+
+```{r}
+
+
+# Expected score over 7 games and round the result to 2 decimal places
+
+Total_rounds<- 7
+
+Expected_Score_Total = Total_rounds * (1 / (1 + 10^((Chess_Players_ratings$AvgOpponentRating - Chess_Players_ratings$PreRating) / 400)))
+
+Expected_Score <- round(Expected_Score_Total,2)
+
+head(Expected_Score,10)
+
+
+# Difference between player's actual score and expected score 
+
+Difference <- Chess_Players_ratings$TotalPoints - Expected_Score
+
+Difference <- round(Difference,2) #Round to 2 decimal places.
+
+head(Difference,10)
+
+
+# Add the expected score and difference columns to our initial players result dataframe. 
+
+Chess_Players_ratings_Update <- Chess_Players_ratings %>%
+  mutate(Expected_Score ,Difference 
+  )
+
+head(Chess_Players_ratings_Update,10)
+
+
+```
+
+## List of the five players who most over performed relative to their expected score
+
+***First method***
+
+Here i will rank the players' score difference in a descending order then extract the top 5 as my result.
+
+```{r}
+
+# Sort players' Difference score in a descending order
+
+Overperformers <- Chess_Players_ratings_Update [order(-Chess_Players_ratings_Update$Difference), ]
+
+Top5_Overperformers <- head(Overperformers, 5)
+
+# List of Final results
+
+Top5_Overperformers[, -2]
+
+```
+
+***Second method***
+
+We will be extracting the five players who most over performed using the "slice_max()" function.
+
+```{r}
+
+# Extract Top five Overperformers
+
+Top5_Overperformers <- Chess_Players_ratings_Update %>%
+  slice_max(Difference, n = 5)
+
+Top5_Overperformers[, -2]
+
+```
+
+## Interpretation
+
+These players who most over performed significantly out punched their weight. For instance, **ADITYA BAJAJ** in particular Pre tournament rating was nearly 200 points below his average opponent rating. According to the logistic distribution implemented by ***Arpad Elo*** to make the ELO Rating system, if the difference in the ratings between two players is **200 points**, then the expected score for the stronger player is **76%**. However, **ADITYA BAJAJ** still scored 6/7, which borders on a huge statistical outlier.
+
+**Source:** <https://en.wikipedia.org/wiki/Elo_rating_system>
+
+## List of the five players who most under performed relative to their expected score
+
+***First method***
+
+Here i will rank the players' score difference in an ascending order then extract the top 5 as my result. Also, i can just use the descending order ranking and get the last five players using "tail"
+
+```{r}
+
+# Extract top 5 of the players' score difference in an ascending order
+
+underperformers <- Chess_Players_ratings_Update[order(Chess_Players_ratings_Update$Difference), ]
+Top5_underperformers <- head(underperformers, 5)
+
+Top5_underperformers[, -2]
+
+# Extract the last 5 players' from the score difference in a descending order from the previous question
+
+Top5_underperformers <- tail(Overperformers, 5)
+
+Top5_underperformers[, -2]
+
+```
+
+***Second Method***
+
+We will be extracting the five players who most overperformed using the "slice_min()" function.
+
+```{r}
+
+# Extract Top 5 Underperformers
+
+Top5_underperformers <- Chess_Players_ratings_Update %>%
+  slice_min(Difference, n = 5)
+
+Top5_underperformers[, -2]
+
+```
+
+## Interpretation
+
+The result here present a dramatic outlier called **Ashwin Balaji** . Indeed, his Pre tournament rating was 1530 whereas the average opponent rating he faced was 1186 which rating difference was 344. According to the "algorithm 400" that gives the relationship between the rating difference Vs Probability of success, **Ashwin Balaji** had closed to 90% chance of success against his opponent yet scored just 1/7.
+
+Source: <https://en.wikipedia.org/wiki/Performance_rating_(chess)>
+
+## CONCLUSION:
+
+These results showed that players coming in with modest Elo ratings consistently performed well above their weight racking up points against stronger opponents far more often than probability would predict. Meanwhile, many of the top-rated players who were expected to cruise through the lower-rated field failed unexpectedly, finishing with scores well below what their ratings suggested they were capable of.
